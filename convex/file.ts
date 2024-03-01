@@ -18,9 +18,9 @@ export const createFile = mutation({
 export const getFiles = query({
   args: {},
 
- async handler(ctx, args) {
+  async handler(ctx, args) {
     const user = await ctx.auth.getUserIdentity();
-    if (!user) return []
+    if (!user) return [];
     return ctx.db.query("files").collect();
   },
 });
