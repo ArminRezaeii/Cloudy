@@ -1,12 +1,26 @@
-import { UserButton } from '@clerk/nextjs'
+import { OrganizationSwitcher, SignInButton, SignOutButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 import React from 'react'
+import { Button } from '../ui/button'
 
 function Navbar() {
     return (
         <nav className='border-b py-4 bg-gray-50'>
             <div className=' items-center container mx-auto justify-between flex'>
-<h1>Logo</h1>
-                <UserButton />
+                <h1>Logo</h1>
+                <div className='flex gap-2'>
+                    <OrganizationSwitcher />
+                    <UserButton />
+                    <SignedOut>
+                        <SignInButton>
+                            <Button>Sign Out</Button>
+                        </SignInButton>
+                    </SignedOut>
+                    <SignedIn>
+                        <SignOutButton>
+                            <Button>Sign Out</Button>
+                        </SignOutButton>
+                    </SignedIn>
+                </div>
             </div>
         </nav>
     )
