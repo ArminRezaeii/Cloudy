@@ -9,6 +9,7 @@ async function hassAccessToOrg(
   const user = await getUser(ctx, tokenIdentifier);
   const hassAccess =
     user.orgsId.includes(orgId) || user.tokenIdentifier.includes(orgId);
+  return hassAccess;
 }
 export const createFile = mutation({
   args: {
@@ -20,12 +21,12 @@ export const createFile = mutation({
 
     if (!identity) throw new ConvexError("you must be logged in");
 
-    const user = await getUser(ctx, identity.tokenIdentifier);
     const hassAccess = await hassAccessToOrg(
       ctx,
       identity.tokenIdentifier,
       args.orgId
     );
+
     if (!hassAccess) {
       throw new ConvexError("you do not have  access to this org");
     }
@@ -45,6 +46,12 @@ export const getFiles = query({
     const identity = await ctx.auth.getUserIdentity();
     console.log(identity);
     if (!identity) return [];
+    const hassAccess = await hassAccessToOrg(
+      ctx,
+      identity.tokenIdentifier,
+      args.orgId
+    );
+    if(!hassAccess) return []
     return ctx.db
       .query("files")
       .withIndex("by_orgId", (q) => q.eq("orgId", args.orgId))
