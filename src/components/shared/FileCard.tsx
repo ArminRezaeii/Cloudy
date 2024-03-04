@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { ReactNode, useState } from 'react'
 import {
     Card,
     CardContent,
@@ -7,9 +7,9 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
-import { Doc } from '../../../convex/_generated/dataModel'
+import { Doc, Id } from '../../../convex/_generated/dataModel'
 import { Button } from '../ui/button'
-import { MoreVertical, TrashIcon } from "lucide-react";
+import { FileTextIcon, GanttChartIcon, ImageIcon, MoreVertical, TextIcon, TrashIcon } from "lucide-react";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -30,6 +30,13 @@ import {
 import { useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { useToast } from '../ui/use-toast';
+import Image from 'next/image';
+function getFileUrl(fileId: Id<"_storage">) {
+    console.log(fileId)
+    https://hip-anaconda-146.convex.cloud/api/storage/f628a069-a065-4cdd-98ba-bb7771f7cdaf
+    return `${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${fileId}`
+
+}
 function FileCardActions({ file }: { file: Doc<"files"> }) {
     const deleteFile = useMutation(api.file.deleteFile)
     const [isConfirmOpen, setIsConfirmOpen] = useState(false)
@@ -39,6 +46,7 @@ function FileCardActions({ file }: { file: Doc<"files"> }) {
             await deleteFile({
                 fileId: file._id
             })
+
             toast({
                 variant: "default",
                 title: "File deleted",
@@ -79,18 +87,35 @@ function FileCardActions({ file }: { file: Doc<"files"> }) {
     </>)
 }
 function FileCard({ file }: { file: Doc<"files"> }) {
+    const typesIcon = {
+        "image": <ImageIcon />,
+        "pdf": <FileTextIcon />,
+        "csv": <GanttChartIcon />,
+    } as Record<Doc<"files">["type"], ReactNode>;
     return (
         <Card>
             <CardHeader className='relative'>
-                <CardTitle>{file.name} </CardTitle>
+                <CardTitle className='flex gap-3'>
+                    <div className='flex justify-center'>   {typesIcon[file.type]}</div>
+                    {file.name} </CardTitle>
                 <div className='absolute top-2 right-2'><FileCardActions file={file} /></div>
 
             </CardHeader>
-            <CardContent>
-                <p>Card Content</p>
+            <CardContent className=' bg flex justify-center  items-center'>
+                {file.type == "image" && <Image
+                    alt={file.name}
+                    width={200}
+                    height={100}
+                    src={getFileUrl(file.fileId)}
+                />}
+                {file.type == "csv" && <GanttChartIcon className='w-20 h-20' />}
+                {file.type == "pdf" && <FileTextIcon className='w-20 h-20' />}
+
             </CardContent>
-            <CardFooter>
-                <Button>Download</Button>
+            <CardFooter className='flex justify-center'>
+                <Button onClick={() => {
+                    window.open(getFileUrl(file.fileId), "blank")
+                }}>Download</Button>
             </CardFooter>
         </Card>
     )

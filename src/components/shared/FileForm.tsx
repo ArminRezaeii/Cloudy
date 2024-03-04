@@ -27,6 +27,7 @@ import {
 import { useEffect, useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
 import { Loader2 } from "lucide-react"
+import { Doc } from "../../../convex/_generated/dataModel"
 function FileForm() {
     const { toast } = useToast()
     const organization = useOrganization()
@@ -52,17 +53,26 @@ function FileForm() {
     async function onSubmit(values: z.infer<typeof formSchema>) {
         if (!orgId) return
         const postUrl = await generateUploadUrl();
+        const fileType = values.file[0].type
         const result = await fetch(postUrl, {
             method: "POST",
-            headers: { "Content-Type": values.file[0]!.type },
+            headers: { "Content-Type": fileType },
             body: values.file[0],
         });
+        console.log(values.file[0].type)
         const { storageId } = await result.json();
+        const types = {
+            "image/png": "image",
+            "application/pdf": "pdf",
+            "text/csv": "csv",
+            "image/jpeg": "image"
+        } as Record<string, Doc<"files">["type"]>
         try {
             await createFile({
                 name: values.title,
                 fileId: storageId,
-                orgId: orgId
+                orgId: orgId,
+                type: types[fileType]
             })
             form.reset()
             setIsFileDialogOpen(false)
