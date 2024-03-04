@@ -10,16 +10,9 @@ function Navbar() {
                 <div className='flex gap-2'>
                     <OrganizationSwitcher />
                     <UserButton />
-                    <SignedOut>
-                        <SignInButton>
-                            <Button>Sign Out</Button>
-                        </SignInButton>
-                    </SignedOut>
-                    <SignedIn>
-                        <SignOutButton>
-                            <Button>Sign Out</Button>
-                        </SignOutButton>
-                    </SignedIn>
+                  <SignedOut>
+                    <SignInButton></SignInButton>
+                  </SignedOut>
                 </div>
             </div>
         </nav>

@@ -68,7 +68,7 @@ function FileForm() {
             setIsFileDialogOpen(false)
 
             toast({
-
+                variant: "success",
                 title: "File Uploaded",
                 description: "Now everyone can view your file"
             })
