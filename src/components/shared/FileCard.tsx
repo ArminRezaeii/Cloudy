@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card"
 import { Doc, Id } from '../../../convex/_generated/dataModel'
 import { Button } from '../ui/button'
-import { FileTextIcon, GanttChartIcon, ImageIcon, MoreVertical, TextIcon, TrashIcon } from "lucide-react";
+import { FileTextIcon, GanttChartIcon, ImageIcon, MoreVertical, StarIcon, TextIcon, TrashIcon } from "lucide-react";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -31,6 +31,7 @@ import { useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { useToast } from '../ui/use-toast';
 import Image from 'next/image';
+import { DropdownMenuSeparator } from '@radix-ui/react-dropdown-menu';
 function getFileUrl(fileId: Id<"_storage">) {
     console.log(fileId)
     https://hip-anaconda-146.convex.cloud/api/storage/f628a069-a065-4cdd-98ba-bb7771f7cdaf
@@ -41,6 +42,7 @@ function FileCardActions({ file }: { file: Doc<"files"> }) {
     const deleteFile = useMutation(api.file.deleteFile)
     const [isConfirmOpen, setIsConfirmOpen] = useState(false)
     const { toast } = useToast()
+    const toggleFavorite = useMutation(api.file.toggleFavorite)
     const handleDeleteFile = async () => {
         try {
             await deleteFile({
@@ -61,6 +63,12 @@ function FileCardActions({ file }: { file: Doc<"files"> }) {
             })
         }
     }
+    const handleFavoriteFile = () => {
+        toggleFavorite({
+            fileId: file._id,
+            
+        })
+    }
     return (<>
         <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
             <AlertDialogContent>
@@ -80,6 +88,8 @@ function FileCardActions({ file }: { file: Doc<"files"> }) {
         <DropdownMenu>
             <DropdownMenuTrigger><MoreVertical /></DropdownMenuTrigger>
             <DropdownMenuContent>
+                <DropdownMenuItem className="flex gap-1  items-center cursor-pointer" onClick={handleFavoriteFile}><StarIcon className='w-4 h-4' />Favorite</DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem className="flex gap-1 text-red-600 items-center cursor-pointer" onClick={() => setIsConfirmOpen(true)}><TrashIcon className='w-4 h-4' />Delete</DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
@@ -93,7 +103,7 @@ function FileCard({ file }: { file: Doc<"files"> }) {
         "csv": <GanttChartIcon />,
     } as Record<Doc<"files">["type"], ReactNode>;
     return (
-        <Card>
+        <Card >
             <CardHeader className='relative'>
                 <CardTitle className='flex gap-3'>
                     <div className='flex justify-center'>   {typesIcon[file.type]}</div>
@@ -101,7 +111,7 @@ function FileCard({ file }: { file: Doc<"files"> }) {
                 <div className='absolute top-2 right-2'><FileCardActions file={file} /></div>
 
             </CardHeader>
-            <CardContent className=' bg flex justify-center  items-center'>
+            <CardContent className="h-[200px] flex justify-center items-center">
                 {file.type == "image" && <Image
                     alt={file.name}
                     width={200}
