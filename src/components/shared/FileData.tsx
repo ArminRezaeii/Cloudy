@@ -23,16 +23,20 @@ function PlaceHolder() {
 
 }
 
-export default function FileData({ title, favorite}: { title: string, favorite?: boolean}) {
+export default function FileData({ title, favorite }: { title: string, favorite?: boolean }) {
   const organization = useOrganization()
   const user = useUser()
   const [query, setQuery] = useState("")
+
   let orgId: string | undefined = undefined
   if (organization.isLoaded && user.isLoaded) {
     orgId = organization.organization?.id ?? user.user?.id
   }
-  const getFiles = useQuery(api.file.getFiles, orgId ? { orgId, query,favorite } : "skip")
+  const getFiles = useQuery(api.file.getFiles, orgId ? { orgId, query, favorite } : "skip")
   const isLoading = getFiles == undefined
+  const allFavorites = useQuery(api.file.getAllFavorites,
+    orgId ? { orgId } : "skip"
+  )
   return (
 
     <div >
@@ -53,7 +57,7 @@ export default function FileData({ title, favorite}: { title: string, favorite?:
             <PlaceHolder />
           )}
           <div className="grid grid-cols-3 gap-4">
-            {getFiles?.map((file) => <FileCard key={file._id} file={file} />)}
+            {getFiles?.map((file) => <FileCard allFavorites={allFavorites ?? []} key={file._id} file={file} />)}
           </div>
 
         </>)}

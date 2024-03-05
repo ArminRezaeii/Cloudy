@@ -10,15 +10,29 @@ export const generateUploadUrl = mutation(async (ctx) => {
   return await ctx.storage.generateUploadUrl();
 });
 
-async function hassAccessToOrg(
-  ctx: QueryCtx | MutationCtx,
-  tokenIdentifier: string,
-  orgId: string
-) {
-  const user = await getUser(ctx, tokenIdentifier);
-  const hassAccess =
+async function hasAccessToOrg(ctx: QueryCtx | MutationCtx, orgId: string) {
+  const identity = await ctx.auth.getUserIdentity();
+
+  if (!identity) {
+    return null;
+  }
+
+  const user = await ctx.db
+    .query("users")
+    .withIndex("by_tokenIdentifier", (q) =>
+      q.eq("tokenIdentifier", identity.tokenIdentifier)
+    )
+    .first();
+
+  if (!user) {
+    return null;
+  }
+  const hasAccess =
     user.orgsId.includes(orgId) || user.tokenIdentifier.includes(orgId);
-  return hassAccess;
+  if (!hasAccess) {
+    return null;
+  }
+  return { user };
 }
 export const createFile = mutation({
   args: {
@@ -28,15 +42,7 @@ export const createFile = mutation({
     type: fileTypes,
   },
   async handler(ctx, args) {
-    const identity = await ctx.auth.getUserIdentity();
-
-    if (!identity) throw new ConvexError("you must be logged in");
-
-    const hassAccess = await hassAccessToOrg(
-      ctx,
-      identity.tokenIdentifier,
-      args.orgId
-    );
+    const hassAccess = await hasAccessToOrg(ctx, args.orgId);
 
     if (!hassAccess) {
       throw new ConvexError("you do not have  access to this org");
@@ -58,13 +64,7 @@ export const getFiles = query({
   },
 
   async handler(ctx, args) {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
-    const hassAccess = await hassAccessToOrg(
-      ctx,
-      identity.tokenIdentifier,
-      args.orgId
-    );
+    const hassAccess = await hasAccessToOrg(ctx, args.orgId);
     if (!hassAccess) return [];
     let file = await ctx.db
       .query("files")
@@ -77,17 +77,10 @@ export const getFiles = query({
       );
     }
     if (args.favorite) {
-      const user = await ctx.db
-        .query("users")
-        .withIndex("by_tokenIdentifier", (q) =>
-          q.eq("tokenIdentifier", identity.tokenIdentifier)
-        )
-        .first();
-      if (!user) return file;
       const favorite = await ctx.db
         .query("favorites")
         .withIndex("by_userId_orgId_fileId", (q) =>
-          q.eq("userId", user._id).eq("orgId", args.orgId)
+          q.eq("userId", hassAccess.user._id).eq("orgId", args.orgId)
         )
         .collect();
       file = file.filter((file) =>
@@ -132,6 +125,27 @@ export const toggleFavorite = mutation({
     }
   },
 });
+
+export const getAllFavorites = query({
+  args: { orgId: v.string() },
+  async handler(ctx, args) {
+    const hasAccess = await hasAccessToOrg(ctx, args.orgId);
+
+    if (!hasAccess) {
+      return [];
+    }
+
+    const favorites = await ctx.db
+      .query("favorites")
+      .withIndex("by_userId_orgId_fileId", (q) =>
+        q.eq("userId", hasAccess.user._id).eq("orgId", args.orgId)
+      )
+      .collect();
+
+    return favorites;
+  },
+});
+
 async function hassaccessToFile(
   ctx: QueryCtx | MutationCtx,
   fileId: Id<"files">
@@ -143,18 +157,8 @@ async function hassaccessToFile(
 
   if (!file) return null;
 
-  const hassAccess = await hassAccessToOrg(
-    ctx,
-    identity.tokenIdentifier,
-    file.orgId
-  );
+  const hassAccess = await hasAccessToOrg(ctx, file.orgId);
   if (!hassAccess) return null;
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_tokenIdentifier", (q) =>
-      q.eq("tokenIdentifier", identity.tokenIdentifier)
-    )
-    .first();
-  if (!user) return null;
-  return { user, file };
+
+  return { user: hassAccess.user, file };
 }
