@@ -7,9 +7,7 @@
 // };
 
 import Sidebar from "@/components/shared/Sidebar";
-import { Button } from "@/components/ui/button";
-import { FileIcon, StarIcon } from "lucide-react";
-import Link from "next/link";
+
 
 export default function DashbordLayout({
   children,

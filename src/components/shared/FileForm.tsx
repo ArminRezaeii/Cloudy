@@ -59,21 +59,20 @@ function FileForm() {
             headers: { "Content-Type": fileType },
             body: values.file[0],
         });
-        console.log(values.file[0].type)
         const { storageId } = await result.json();
         const types = {
             "image/png": "image",
             "application/pdf": "pdf",
             "text/csv": "csv",
             "image/jpeg": "image"
-        } as Record<string, Doc<"files">["type"]>
+        } as Record<string, Doc<"files">["type"]>;
         try {
             await createFile({
                 name: values.title,
                 fileId: storageId,
-                orgId: orgId,
-                type: types[fileType]
-            })
+                orgId,
+                type: types[fileType],
+            });
             form.reset()
             setIsFileDialogOpen(false)
 

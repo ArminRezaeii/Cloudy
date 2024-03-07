@@ -8,8 +8,8 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import { Doc, Id } from '../../../convex/_generated/dataModel'
-import { Button } from '../ui/button'
-import { FileTextIcon, GanttChartIcon, Heart, HeartOff, ImageIcon, MoreVertical, StarHalf, StarIcon, TextIcon, TrashIcon } from "lucide-react";
+import { format, formatDistance, formatRelative, subDays } from 'date-fns'
+import { FileIcon, FileTextIcon, GanttChartIcon, Heart, HeartOff, ImageIcon, MoreVertical, StarHalf, StarIcon, TextIcon, TrashIcon, UndoIcon } from "lucide-react";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -21,28 +21,30 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useMutation } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { useToast } from '../ui/use-toast';
 import Image from 'next/image';
 import { DropdownMenuSeparator } from '@radix-ui/react-dropdown-menu';
+import { Protect } from '@clerk/nextjs';
+import { formatRevalidate } from 'next/dist/server/lib/revalidate';
 function getFileUrl(fileId: Id<"_storage">) {
-    console.log(fileId)
-    https://hip-anaconda-146.convex.cloud/api/storage/f628a069-a065-4cdd-98ba-bb7771f7cdaf
-    return `${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${fileId}`
-
+    return `https://hip-anaconda-146.convex.cloud/api/storage/${fileId}`
 }
 function FileCardActions({ file, isFavorited }: { file: Doc<"files">, isFavorited: boolean }) {
     const deleteFile = useMutation(api.file.deleteFile)
     const [isConfirmOpen, setIsConfirmOpen] = useState(false)
     const { toast } = useToast()
     const toggleFavorite = useMutation(api.file.toggleFavorite)
+    const restoreFile = useMutation(api.file.restoreFile)
+
     const handleDeleteFile = async () => {
         try {
             await deleteFile({
@@ -51,8 +53,8 @@ function FileCardActions({ file, isFavorited }: { file: Doc<"files">, isFavorite
 
             toast({
                 variant: "default",
-                title: "File deleted",
-                description: "Your file is now gone from the system"
+                title: "File set for deletion",
+                description: "this file will be deleted in 30 minutes."
             })
         } catch (e) {
             console.error(e)
@@ -75,8 +77,7 @@ function FileCardActions({ file, isFavorited }: { file: Doc<"files">, isFavorite
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete your account
-                        and remove your data from our servers.
+                        This action will initiate the file for our deletion process. Files are subject to periodic deletion
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -88,18 +89,42 @@ function FileCardActions({ file, isFavorited }: { file: Doc<"files">, isFavorite
         <DropdownMenu>
             <DropdownMenuTrigger><MoreVertical /></DropdownMenuTrigger>
             <DropdownMenuContent>
+                <DropdownMenuItem className="flex gap-1  items-center cursor-pointer" onClick={() => {
+                    window.open(getFileUrl(file.fileId), "blank")
+                }}>
+                    <FileIcon className='w-4 h-4' />Download
+                </DropdownMenuItem>
+
                 <DropdownMenuItem className="flex gap-1  items-center cursor-pointer" onClick={handleFavoriteFile}>
                     {isFavorited ?
                         <div className='flex gap-1 items-center'>
-                            <HeartOff className='w-4 h-4' />    unfavourite
+                            <HeartOff className='w-4 h-4' />    Unfavourite
                         </div> :
-                         <div className='flex gap-1 items-center'>
+                        <div className='flex gap-1 items-center'>
                             <Heart className='w-4 h-4' /> Favorite
                         </div>}
 
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="flex gap-1 text-red-600 items-center cursor-pointer" onClick={() => setIsConfirmOpen(true)}><TrashIcon className='w-4 h-4' />Delete</DropdownMenuItem>
+                <Protect
+                    role='org:admin' fallback={<></>}
+                >
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="flex gap-1 items-center cursor-pointer" onClick={() => {
+                        if (file.shouldDelete) {
+                            restoreFile({ fileId: file._id })
+
+                        } else {
+                            setIsConfirmOpen(true)
+                        }
+                    }}>
+                        {file.shouldDelete ? <div className="flex gap-1 text-green-600 items-center cursor-pointer"><UndoIcon className='w-4 h-4' /> Restore </div> :
+                            <div className="flex gap-1 items-center text-red-600 cursor-pointer">
+                                <TrashIcon className='w-4 h-4' />
+                                Delete
+                            </div>
+                        }
+                    </DropdownMenuItem>
+                </Protect>
             </DropdownMenuContent>
         </DropdownMenu>
 
@@ -111,34 +136,47 @@ function FileCard({ file, allFavorites }: { file: Doc<"files">, allFavorites: Do
         "pdf": <FileTextIcon />,
         "csv": <GanttChartIcon />,
     } as Record<Doc<"files">["type"], ReactNode>;
+    const userProfile = useQuery(api.users.getUserProfile, {
+        userId: file.userId
+    })
     const isFavorited = allFavorites.some(f => f.fileId == file._id)
 
 
     return (
         <Card >
             <CardHeader className='relative'>
-                <CardTitle className='flex gap-3'>
+                <CardTitle className='flex gap-3 text-base font-normal' >
                     <div className='flex justify-center'>   {typesIcon[file.type]}</div>
                     {file.name} </CardTitle>
                 <div className='absolute top-2 right-2'>
                     <FileCardActions isFavorited={isFavorited} file={file} />
                 </div>
             </CardHeader>
+
             <CardContent className="h-[200px] flex justify-center items-center">
                 {file.type == "image" && <Image
                     alt={file.name}
                     width={200}
                     height={100}
                     src={getFileUrl(file.fileId)}
+
                 />}
+
                 {file.type == "csv" && <GanttChartIcon className='w-20 h-20' />}
                 {file.type == "pdf" && <FileTextIcon className='w-20 h-20' />}
 
             </CardContent>
-            <CardFooter className='flex justify-center'>
-                <Button onClick={() => {
-                    window.open(getFileUrl(file.fileId), "blank")
-                }}>Download</Button>
+            <CardFooter className='flex justify-between '>
+                <div className='flex gap-2 text-xs text-gray-700 w-40 items-center'>
+                    <Avatar className='w-6 h-6 '>
+                        <AvatarImage src={userProfile?.image} />
+                        <AvatarFallback>CN</AvatarFallback>
+                    </Avatar>
+                    {userProfile?.name}
+                </div>
+                <div className='text-xs text-gray-700'>
+                    Uploaded on {formatRelative((new Date(file._creationTime), 3), new Date())}
+                </div>
             </CardFooter>
         </Card>
     )

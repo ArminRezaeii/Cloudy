@@ -23,7 +23,7 @@ function PlaceHolder() {
 
 }
 
-export default function FileData({ title, favorite }: { title: string, favorite?: boolean }) {
+export default function FileData({ title, favorite,deletedOnly }: { title: string, favorite?: boolean ,deletedOnly?:boolean}) {
   const organization = useOrganization()
   const user = useUser()
   const [query, setQuery] = useState("")
@@ -32,7 +32,7 @@ export default function FileData({ title, favorite }: { title: string, favorite?
   if (organization.isLoaded && user.isLoaded) {
     orgId = organization.organization?.id ?? user.user?.id
   }
-  const getFiles = useQuery(api.file.getFiles, orgId ? { orgId, query, favorite } : "skip")
+  const getFiles = useQuery(api.file.getFiles, orgId ? { orgId, query, favorite,deletedOnly } : "skip")
   const isLoading = getFiles == undefined
   const allFavorites = useQuery(api.file.getAllFavorites,
     orgId ? { orgId } : "skip"
