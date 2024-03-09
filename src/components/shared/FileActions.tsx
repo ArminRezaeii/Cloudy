@@ -1,15 +1,7 @@
-import React, { ReactNode, useState } from 'react'
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card"
+import React, { useState } from 'react'
+
 import { Doc, Id } from '../../../convex/_generated/dataModel'
-import { format, formatDistance, formatRelative, subDays } from 'date-fns'
-import { FileIcon, FileTextIcon, GanttChartIcon, Heart, HeartOff, ImageIcon, MoreVertical, StarHalf, StarIcon, TextIcon, TrashIcon, UndoIcon } from "lucide-react";
+import { FileIcon, Heart, HeartOff, MoreVertical, TrashIcon, UndoIcon } from "lucide-react";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -19,9 +11,7 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -31,10 +21,8 @@ import {
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { useToast } from '../ui/use-toast';
-import Image from 'next/image';
 import { DropdownMenuSeparator } from '@radix-ui/react-dropdown-menu';
 import { Protect } from '@clerk/nextjs';
-import { formatRevalidate } from 'next/dist/server/lib/revalidate';
 export function getFileUrl(fileId: Id<"_storage">) {
     return `https://hip-anaconda-146.convex.cloud/api/storage/${fileId}`
 }
@@ -44,7 +32,7 @@ export default function FileCardActions({ file, isFavorited }: { file: Doc<"file
     const { toast } = useToast()
     const toggleFavorite = useMutation(api.file.toggleFavorite)
     const restoreFile = useMutation(api.file.restoreFile)
-
+const me=useQuery(api.users.getMe)
     const handleDeleteFile = async () => {
         try {
             await deleteFile({
@@ -106,7 +94,12 @@ export default function FileCardActions({ file, isFavorited }: { file: Doc<"file
 
                 </DropdownMenuItem>
                 <Protect
-                    role='org:admin' fallback={<></>}
+                    fallback={<></>}
+                    condition={(check) => {
+                        return check({
+                            role: "org:admin"
+                        }) || file.userId == me?._id
+                    }}
                 >
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="flex gap-1 items-center cursor-pointer" onClick={() => {

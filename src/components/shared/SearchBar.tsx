@@ -28,9 +28,9 @@ function SearchBar({ query, setQuery }: { query: string, setQuery: Dispatch<SetS
         setQuery(values.query)
     }
     return (
-        <div className=''>
+        <div>
             <Form {...form} >
-                <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-2 items-center">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-2 max-lg:mt-4 items-center">
                     <FormField
                         control={form.control}
                         name="query"

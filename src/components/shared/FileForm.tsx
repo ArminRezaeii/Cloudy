@@ -102,7 +102,7 @@ function FileForm() {
                 form.reset()
             }} >
                 <DialogTrigger asChild>
-                    <Button >Upload File</Button>
+                    <Button className="max-lg:mt-4" >Upload File</Button>
                 </DialogTrigger>
                 <DialogContent>
                     <DialogHeader>
@@ -151,8 +151,6 @@ function FileForm() {
                     </DialogHeader>
                 </DialogContent>
             </Dialog>
-
-
         </>
     )
 }
