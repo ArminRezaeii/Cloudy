@@ -7,6 +7,10 @@ import { useQuery } from "convex/react"
 import { api } from "../../../convex/_generated/api"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import FileCardActions from "./FileActions"
+const useUserProfile = (userId: any) => {
+    const userProfile = useQuery(api.users.getUserProfile, { userId });
+    return userProfile;
+};
 
 export const columns: ColumnDef<Doc<"files"> & { isFavorited: boolean }>[] = [
     {
@@ -20,9 +24,7 @@ export const columns: ColumnDef<Doc<"files"> & { isFavorited: boolean }>[] = [
     },
     {
         header: "User", cell: ({ row }) => {
-            const userProfile = useQuery(api.users.getUserProfile, {
-                userId: row.original.userId
-            })
+            const userProfile = useUserProfile(row.original.userId)
             return <div className='flex gap-2 text-xs text-gray-700 w-40 items-center'>
                 <Avatar className='w-6 h-6 '>
                     <AvatarImage src={userProfile?.image} />
