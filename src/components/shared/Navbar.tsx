@@ -11,9 +11,9 @@ function Navbar() {
                 <Link href="/" className='flex gap-2 items-center text-xl'>
                     < Image className='rounded-[50%]' src="/CloudyLogo.jpg" width={50} height={50} alt='Logo' />Cloudy
                 </Link>
-<Button variant={"outline"}>
-<Link href="/dashbord/files">Your files</Link>
-</Button>
+                <Button variant={"outline"}>
+                    <Link href="/dashbord/files">Your files</Link>
+                </Button>
                 <div className='flex gap-2'>
                     <OrganizationSwitcher />
                     <UserButton />
