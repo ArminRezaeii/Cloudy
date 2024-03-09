@@ -36,41 +36,43 @@ function Navbar() {
                     <div className='flex max-lg:mt-8 justify-between gap-2 items-center'>
                         <OrganizationSwitcher />
                         <UserButton />
-                        <Menubar className='hidden max-md:flex'>
-                            <MenubarMenu>
-                                <MenubarTrigger><MenuIcon />
-                                </MenubarTrigger>
-                                <MenubarContent>
-                                    <MenubarItem>
-                                        <Link href="/dashbord/files">
+                        <SignedIn>
+                            <Menubar className='hidden max-md:flex'>
+                                <MenubarMenu>
+                                    <MenubarTrigger><MenuIcon />
+                                    </MenubarTrigger>
+                                    <MenubarContent>
+                                        <MenubarItem>
+                                            <Link href="/dashbord/files">
+                                                <Button variant={"link"} className={clsx("flex gap-2", {
+                                                    "text-black": pathname.includes("/dashbord/files")
+                                                })}>
+                                                    <FileIcon />All Files
+                                                </Button>
+                                            </Link>
+                                        </MenubarItem>
+                                        <MenubarSeparator />
+                                        <MenubarItem>
+                                            <Link href="/dashbord/favorites">
+                                                <Button variant={"link"} className={clsx("flex gap-2", {
+                                                    "text-black": pathname.includes("/dashbord/favorite")
+                                                })}>
+                                                    <StarIcon />Favorites
+                                                </Button>
+                                            </Link>
+                                        </MenubarItem>
+                                        <MenubarSeparator />
+                                        <MenubarItem>   <Link href="/dashbord/trash">
                                             <Button variant={"link"} className={clsx("flex gap-2", {
-                                                "text-black": pathname.includes("/dashbord/files")
+                                                "text-black": pathname.includes("/dashbord/trash")
                                             })}>
-                                                <FileIcon />All Files
+                                                <TrashIcon />Trash
                                             </Button>
-                                        </Link>
-                                    </MenubarItem>
-                                    <MenubarSeparator />
-                                    <MenubarItem>
-                                        <Link href="/dashbord/favorites">
-                                            <Button variant={"link"} className={clsx("flex gap-2", {
-                                                "text-black": pathname.includes("/dashbord/favorite")
-                                            })}>
-                                                <StarIcon />Favorites
-                                            </Button>
-                                        </Link>
-                                    </MenubarItem>
-                                    <MenubarSeparator />
-                                    <MenubarItem>   <Link href="/dashbord/trash">
-                                        <Button variant={"link"} className={clsx("flex gap-2", {
-                                            "text-black": pathname.includes("/dashbord/trash")
-                                        })}>
-                                            <TrashIcon />Trash
-                                        </Button>
-                                    </Link></MenubarItem>
-                                </MenubarContent>
-                            </MenubarMenu>
-                        </Menubar>
+                                        </Link></MenubarItem>
+                                    </MenubarContent>
+                                </MenubarMenu>
+                            </Menubar>
+                        </SignedIn>
                     </div>
                     <SignedOut>
                         <SignInButton>
